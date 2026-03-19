@@ -44,6 +44,11 @@ console.log('  - GitHub Callback:', process.env.GITHUB_CALLBACK_URL);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Session middleware with in-memory store
 const sessionMiddleware = session({
@@ -60,7 +65,7 @@ const sessionMiddleware = session({
 
 // Middleware
 app.use(cors({ 
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', 
+  origin: FRONTEND_URL,
   credentials: true 
 }));
 app.use(express.json());
@@ -462,10 +467,10 @@ app.get('/auth/github', passport.authenticate('github', { scope: ['user:email', 
 
 app.get(
   '/auth/github/callback',
-  passport.authenticate('github', { failureRedirect: 'http://localhost:3000/login' }),
+  passport.authenticate('github', { failureRedirect: `${FRONTEND_URL}/login` }),
   (req, res) => {
     console.log('GitHub callback successful, user:', req.user);
-    res.redirect('http://localhost:3000/editor');
+    res.redirect(`${FRONTEND_URL}/editor`);
   }
 );
 
@@ -506,7 +511,7 @@ app.get('/logout', (req, res, next) => {
       if (err) {
         console.error('Session destroy error:', err);
       }
-      res.redirect('http://localhost:3000');
+      res.redirect(FRONTEND_URL);
     });
   });
 });
